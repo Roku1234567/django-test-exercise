@@ -15,31 +15,31 @@ def index(request):
         title = request.POST.get('title', '').strip()
         if title:
             # due_at を安全にパース
-            due_at_str = request.POST.get('due_at', '').strip()
             due_at = None
+            due_at_str = request.POST.get('due_at', '').strip()
             if due_at_str:
                 dt = parse_datetime(due_at_str)
                 if dt is not None:
                     due_at = make_aware(dt)
+
             # content も取得
             content = request.POST.get('content', '').strip()
+
             # 新規作成
             Task.objects.create(
                 title=title,
                 due_at=due_at,
                 content=content,
             )
-        # POST 後はリダイレクト（F5二重送信防止）
-        return redirect('index')
+        # → redirect はせずにこのまま下の一覧取得＋renderへ
 
-    # GET のときは並び替えして一覧を表示
+    # GET／POST 後ともに一覧を取得してレンダー
     if request.GET.get('order') == 'due':
         tasks = Task.objects.order_by('due_at')
     else:
         tasks = Task.objects.order_by('-posted_at')
 
     return render(request, 'todo/index.html', {'tasks': tasks})
-
 def detail(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
